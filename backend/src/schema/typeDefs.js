@@ -90,6 +90,8 @@ export const typeDefs = `#graphql
         ): OrderCommandPayload!
     }
     
-
+    type Subscription {
+    orderStatusChanged(orderId: ID!): Order!
+    }
 
 `;

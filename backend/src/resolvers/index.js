@@ -17,6 +17,11 @@ import {
   cancelOrderCommand
 } from "../commands/cancelOrderCommand.js";
 
+import {
+  pubsub,
+  ORDER_STATUS_CHANGED
+} from "../pubsub/pubsub.js";
+
 export const resolvers = {
   Query: {
     hello: () => "Afirmative Pill GraphQL API",
@@ -39,16 +44,61 @@ Mutation: {
         },
 
         validatePrescription: async (_, { orderId }) => {
-            return await validatePrescriptionCommand(orderId);
+        const result =
+            await validatePrescriptionCommand(orderId);
+
+        if (result.success && result.order) {
+            await pubsub.publish(ORDER_STATUS_CHANGED, {
+            orderStatusChanged: result.order
+            });
+        }
+
+        return result;
         },
 
         dispatchOrder: async (_, { orderId }) => {
-        return await dispatchOrderCommand(orderId);
+        const result =
+            await dispatchOrderCommand(orderId);
+
+        if (result.success && result.order) {
+            await pubsub.publish(ORDER_STATUS_CHANGED, {
+            orderStatusChanged: result.order
+            });
+        }
+
+        return result;
         },
 
         cancelOrder: async (_, { orderId }) => {
-        return await cancelOrderCommand(orderId);
+        const result =
+            await cancelOrderCommand(orderId);
+
+        if (result.success && result.order) {
+            await pubsub.publish(ORDER_STATUS_CHANGED, {
+            orderStatusChanged: result.order
+            });
         }
+
+        return result;
+        },
+},
+
+Subscription: {
+  orderStatusChanged: {
+    subscribe: async function* (_, { orderId }) {
+      const iterator = pubsub.asyncIterableIterator(
+        ORDER_STATUS_CHANGED
+      );
+
+      for await (const payload of iterator) {
+        if (
+          payload.orderStatusChanged.id === orderId
+        ) {
+          yield payload;
+        }
+      }
+    }
+  }
 },
 
   Medication: {
