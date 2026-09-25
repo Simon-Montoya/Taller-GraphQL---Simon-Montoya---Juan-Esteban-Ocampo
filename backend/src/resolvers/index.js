@@ -5,6 +5,9 @@ import {
 
 import { createOrderCommand } from "../commands/createOrderCommand.js";
 import { getOrderProjectionById } from "../queries/orderQueries.js";
+import {
+  validatePrescriptionCommand
+} from "../commands/validatePrescriptionCommand.js";
 
 export const resolvers = {
   Query: {
@@ -22,11 +25,15 @@ export const resolvers = {
     }
   },
 
-  Mutation: {
-    createOrder: async (_, { input }) => {
-      return await createOrderCommand(input);
-    }
-  },
+Mutation: {
+        createOrder: async (_, { input }) => {
+            return await createOrderCommand(input);
+        },
+
+        validatePrescription: async (_, { orderId }) => {
+            return await validatePrescriptionCommand(orderId);
+        }
+},
 
   Medication: {
     activeIngredient: (medication) =>

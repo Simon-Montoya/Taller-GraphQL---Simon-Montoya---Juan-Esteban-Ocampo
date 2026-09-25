@@ -68,7 +68,17 @@ export const typeDefs = `#graphql
         order(id: ID!): Order
     }
 
+    type OrderCommandPayload {
+    success: Boolean!
+    order: Order
+    errors: [MutationError!]!
+    }
+
     type Mutation {
-    createOrder(input: CreateOrderInput!): CreateOrderPayload!
+        createOrder(input: CreateOrderInput!): CreateOrderPayload!
+
+        validatePrescription(
+            orderId: ID!
+        ): OrderCommandPayload!
     }
 `;
