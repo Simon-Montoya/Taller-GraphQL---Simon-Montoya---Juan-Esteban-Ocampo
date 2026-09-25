@@ -15,9 +15,58 @@ export const typeDefs = `#graphql
     description: String!
   }
 
-  type Query {
-    hello: String!
-    medications(search: String): [Medication!]!
-    medication(id: Int!): Medication
-  }
+    enum OrderStatus {
+    PENDING_APPROVAL
+    APPROVED
+    DISPATCHED
+    CANCELLED
+    }
+
+    type OrderItem {
+    id: ID!
+    medicationId: Int!
+    quantity: Int!
+    unitPrice: Int!
+    }
+
+    type Order {
+    id: ID!
+    status: OrderStatus!
+    total: Int!
+    prescriptionReference: String
+    prescriptionVerified: Boolean!
+    createdAt: String!
+    items: [OrderItem!]!
+    }
+
+    input OrderItemInput {
+    medicationId: Int!
+    quantity: Int!
+    }
+
+    input CreateOrderInput {
+    items: [OrderItemInput!]!
+    prescriptionReference: String
+    }
+
+    type MutationError {
+    code: String!
+    message: String!
+    }
+
+    type CreateOrderPayload {
+    success: Boolean!
+    order: Order
+    errors: [MutationError!]!
+    }
+
+    type Query {
+        hello: String!
+        medications(search: String): [Medication!]!
+        medication(id: Int!): Medication
+    }
+
+    type Mutation {
+    createOrder(input: CreateOrderInput!): CreateOrderPayload!
+    }
 `;
