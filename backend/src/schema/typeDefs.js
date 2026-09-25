@@ -80,5 +80,16 @@ export const typeDefs = `#graphql
         validatePrescription(
             orderId: ID!
         ): OrderCommandPayload!
+
+        dispatchOrder(
+            orderId: ID!
+        ): OrderCommandPayload!
+
+        cancelOrder(
+            orderId: ID!
+        ): OrderCommandPayload!
     }
+    
+
+
 `;

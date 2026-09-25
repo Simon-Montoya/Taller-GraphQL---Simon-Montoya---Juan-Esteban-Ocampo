@@ -9,6 +9,14 @@ import {
   validatePrescriptionCommand
 } from "../commands/validatePrescriptionCommand.js";
 
+import {
+  dispatchOrderCommand
+} from "../commands/dispatchOrderCommand.js";
+
+import {
+  cancelOrderCommand
+} from "../commands/cancelOrderCommand.js";
+
 export const resolvers = {
   Query: {
     hello: () => "Afirmative Pill GraphQL API",
@@ -32,6 +40,14 @@ Mutation: {
 
         validatePrescription: async (_, { orderId }) => {
             return await validatePrescriptionCommand(orderId);
+        },
+
+        dispatchOrder: async (_, { orderId }) => {
+        return await dispatchOrderCommand(orderId);
+        },
+
+        cancelOrder: async (_, { orderId }) => {
+        return await cancelOrderCommand(orderId);
         }
 },
 
@@ -67,4 +83,6 @@ Mutation: {
             );
         }
     }
+
+    
 };
