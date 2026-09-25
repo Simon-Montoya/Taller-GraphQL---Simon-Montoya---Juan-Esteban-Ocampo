@@ -1,8 +1,9 @@
-﻿import { useRef, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client/react';
-import { ORDER, VALIDATE_PRESCRIPTION, DISPATCH_ORDER, CANCEL_ORDER } from '../graphql/operations';
+﻿import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useMutation, useQuery, useSubscription } from '@apollo/client/react';
+import { ORDER, ORDER_STATUS_CHANGED, VALIDATE_PRESCRIPTION, DISPATCH_ORDER, CANCEL_ORDER } from '../graphql/operations';
 import { Errors, Loading, StatusBadge } from '../components/Feedback';
 import { money } from '../lib/format';
+import { getConnectionStatus, subscribeToConnection } from '../lib/apolloClient';
 export default function OrderPage({ id, created }) {
   const [lookup, setLookup] = useState(id || '');
   return <><span className="eyebrow">FROM PHARMACY TO YOU</span><h1>Track your order</h1>
@@ -15,6 +16,29 @@ export default function OrderPage({ id, created }) {
 }
 function OrderDetails({ id }) {
   const { data, loading, error, refetch } = useQuery(ORDER, { variables: { id }, fetchPolicy: 'cache-and-network', notifyOnNetworkStatusChange: true });
+  const connection = useSyncExternalStore(subscribeToConnection, getConnectionStatus);
+  const { error: subscriptionError, restart } = useSubscription(ORDER_STATUS_CHANGED, {
+    variables: { orderId: id },
+    skip: !data?.order,
+    onData({ client, data: event }) {
+      const changed = event.data?.orderStatusChanged;
+      if (!changed || changed.id !== id) return;
+      // Merge the header, retaining the nested items loaded by TrackOrder.
+      client.cache.updateQuery({ query: ORDER, variables: { id } }, current =>
+        current?.order ? { ...current, order: { ...current.order, ...changed } } : current,
+      );
+    },
+  });
+  const previousConnection = useRef(connection);
+  useEffect(() => {
+    // Catch up after connecting/reconnecting: WebSocket events are not replayed.
+    if (connection === 'connected' && previousConnection.current !== 'connected') {
+      void refetch().catch(() => { /* The existing query error state handles this. */ });
+    }
+    previousConnection.current = connection;
+  }, [connection, refetch]);
+  // useSubscription cleans up on unmount/ID changes; the shared lazy client closes
+  // its socket when the last subscription is removed.
   const [validate, validation] = useMutation(VALIDATE_PRESCRIPTION);
   const [dispatch, dispatching] = useMutation(DISPATCH_ORDER);
   const [cancel, cancelling] = useMutation(CANCEL_ORDER);
@@ -43,6 +67,12 @@ function OrderDetails({ id }) {
   const order = data?.order;
   if (!order) return <p className="state">No order found for this ID.</p>;
   return <article className="panel order"><div className="section-heading"><div><h2>Order details</h2><p className="order-id">{order.id}</p></div><StatusBadge status={order.status} /></div>
+    <p className="muted" role="status" aria-live="polite">
+      {subscriptionError ? 'Live updates unavailable. You can still refresh the status.' :
+        connection === 'connected' ? 'Live updates active' :
+        connection === 'connecting' ? 'Connecting live updates...' : 'Live updates disconnected. Reconnecting...'}
+      {subscriptionError && <> <button className="text-button" onClick={() => restart()}>Retry live updates</button></>}
+    </p>
     <dl className="detail-grid"><div><dt>Prescription reference</dt><dd>{order.prescriptionReference || 'Not provided'}</dd></div><div><dt>Prescription verified</dt><dd>{order.prescriptionVerified ? 'Yes' : 'No'}</dd></div><div><dt>Created</dt><dd>{order.createdAt}</dd></div></dl>
     <h3>Medications</h3>
     {order.items.map(item => <div className="order-item" key={item.id}><div><a href={`#/medication/${item.medicationId}`}>{item.medication.name}</a><p className="muted">{item.medication.presentation}</p><p className="muted">{item.medication.requiresPrescription ? 'Prescription required' : 'No prescription required'}</p></div><div>{item.quantity} × {money(item.unitPrice)}<br /><strong>{money(item.quantity * item.unitPrice)}</strong></div></div>)}
@@ -58,3 +88,4 @@ function OrderDetails({ id }) {
     </div>
   </article>;
 }
+

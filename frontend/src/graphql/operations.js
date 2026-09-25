@@ -51,3 +51,12 @@ export const CANCEL_ORDER = gql`
   }
   ${ORDER_FIELDS}
 `;
+
+// Events contain the order header only; nested items stay in the query cache.
+export const ORDER_STATUS_CHANGED = gql`
+  subscription OrderStatusChanged($orderId: ID!) {
+    orderStatusChanged(orderId: $orderId) {
+      id status total prescriptionReference prescriptionVerified createdAt
+    }
+  }
+`;

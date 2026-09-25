@@ -1,7 +1,8 @@
 ﻿# Afirmative Pill frontend
 
 React + Vite with Apollo Client 4. All server communication uses GraphQL at
-`http://localhost:4000/graphql`. The existing backend, CQRS commands/queries,
+`http://localhost:4000/graphql` for queries/mutations and
+`ws://localhost:4000/graphql` for subscriptions. The existing backend, CQRS commands/queries,
 Supabase persistence, and DataLoader are unchanged.
 
 ## Run
@@ -52,6 +53,20 @@ npm run lint
 
 The cart is in-memory UI state and resets on reload. Hash routes support direct
 links and browser back/forward without adding a routing dependency. There are
-no REST calls, direct Supabase connections, subscriptions, or mock records.
+no REST calls, direct Supabase connections, or mock records.
 Prices retain the existing dollar notation because the schema has no currency
 code. Demo commands perform real backend writes; use workshop records.
+
+## Live order updates
+
+Open the same order in two tabs. Validate, dispatch, or cancel it in one tab;
+the other tab updates its status, prescription information, and available actions
+without refreshing. Use workshop orders because these commands persist changes.
+
+`OrderStatusChanged(orderId)` is active only while an existing order is viewed.
+Apollo splits subscriptions onto GraphQLWsLink and keeps queries/mutations on
+HttpLink. Events merge order header fields into the cache while preserving items.
+The indicator follows WebSocket connection events. Retryable disconnections get
+up to five reconnect attempts; terminal errors show a retry button. Queries and
+mutation controls remain available. Reconnection re-reads the order to catch up
+on missed events. Leaving the page unsubscribes and closes the idle socket.
