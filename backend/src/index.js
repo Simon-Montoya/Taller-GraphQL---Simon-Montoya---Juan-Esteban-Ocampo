@@ -1,5 +1,11 @@
 import { ApolloServer } from "@apollo/server";
-import { startStandaloneServer } from "@apollo/server/standalone";
+import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
+
+import { expressMiddleware } from "@as-integrations/express5";
+
+import express from "express";
+import http from "http";
+import cors from "cors";
 
 import { typeDefs } from "./schema/typeDefs.js";
 import { resolvers } from "./resolvers/index.js";
@@ -8,25 +14,63 @@ import {
   createMedicationLoader
 } from "./loaders/medicationLoader.js";
 
+
+const app = express();
+
+const httpServer = http.createServer(app);
+
+
 const server = new ApolloServer({
   typeDefs,
-  resolvers
+  resolvers,
+
+  plugins: [
+    ApolloServerPluginDrainHttpServer({
+      httpServer
+    })
+  ]
 });
 
-const { url } = await startStandaloneServer(server, {
-  listen: {
-    port: 4000
-  },
 
-  context: async () => {
-    return {
-      loaders: {
-        medication: createMedicationLoader()
-      }
-    };
-  }
+await server.start();
+
+
+app.use(
+  "/graphql",
+
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://studio.apollographql.com"
+    ]
+  }),
+
+  express.json(),
+
+  expressMiddleware(server, {
+    context: async () => {
+      return {
+        loaders: {
+          medication: createMedicationLoader()
+        }
+      };
+    }
+  })
+);
+
+
+const PORT = 4000;
+
+await new Promise((resolve) => {
+  httpServer.listen(
+    {
+      port: PORT
+    },
+    resolve
+  );
 });
+
 
 console.log(
-  `🚀 Afirmative Pill GraphQL Server ready at ${url}`
+  `🚀 Afirmative Pill GraphQL Server ready at http://localhost:${PORT}/graphql`
 );

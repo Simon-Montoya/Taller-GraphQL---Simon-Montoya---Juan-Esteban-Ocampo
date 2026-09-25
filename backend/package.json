@@ -13,9 +13,12 @@
   },
   "dependencies": {
     "@apollo/server": "^5.5.1",
+    "@as-integrations/express5": "^1.1.2",
     "@supabase/supabase-js": "^2.117.1",
+    "cors": "^2.8.6",
     "dataloader": "^2.2.3",
     "dotenv": "^18.0.3",
+    "express": "^5.2.1",
     "graphql": "^16.14.2"
   }
 }
