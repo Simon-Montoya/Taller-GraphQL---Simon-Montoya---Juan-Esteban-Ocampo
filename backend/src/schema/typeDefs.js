@@ -27,6 +27,7 @@ export const typeDefs = `#graphql
     medicationId: Int!
     quantity: Int!
     unitPrice: Int!
+    medication: Medication!
     }
 
     type Order {
@@ -64,6 +65,7 @@ export const typeDefs = `#graphql
         hello: String!
         medications(search: String): [Medication!]!
         medication(id: Int!): Medication
+        order(id: ID!): Order
     }
 
     type Mutation {

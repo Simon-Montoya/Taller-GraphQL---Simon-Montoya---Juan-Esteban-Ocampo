@@ -36,3 +36,22 @@ export async function getMedicationById(id) {
 
   return data;
 }
+
+export async function getMedicationsByIds(ids) {
+  if (!ids || ids.length === 0) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("medications")
+    .select("*")
+    .in("id", ids);
+
+  if (error) {
+    throw new Error(
+      `Error fetching medications by ids: ${error.message}`
+    );
+  }
+
+  return data ?? [];
+}

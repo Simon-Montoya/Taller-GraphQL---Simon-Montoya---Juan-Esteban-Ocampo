@@ -4,10 +4,14 @@ import {
 } from "../queries/medicationQueries.js";
 
 import { createOrderCommand } from "../commands/createOrderCommand.js";
+import { getOrderProjectionById } from "../queries/orderQueries.js";
 
 export const resolvers = {
   Query: {
     hello: () => "Afirmative Pill GraphQL API",
+    order: async (_, { id }) => {
+      return await getOrderProjectionById(id);
+    },
 
     medications: async (_, { search }) => {
       return await getMedications(search);
@@ -43,11 +47,17 @@ export const resolvers = {
       order.created_at
   },
 
-  OrderItem: {
-    medicationId: (item) =>
-      item.medication_id,
+    OrderItem: {
+        medicationId: (item) =>
+            item.medication_id,
 
-    unitPrice: (item) =>
-      item.unit_price
-  }
+        unitPrice: (item) =>
+            item.unit_price,
+
+        medication: async (item, _, context) => {
+            return await context.loaders.medication.load(
+            item.medication_id
+            );
+        }
+    }
 };
