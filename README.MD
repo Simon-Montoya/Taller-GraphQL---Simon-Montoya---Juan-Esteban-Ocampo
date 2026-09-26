@@ -2,6 +2,10 @@
 
 ## GraphQL & CQRS Architecture for Pharmaceutical E-Commerce
 
+## Video explicativo
+
+https://youtu.be/VzXAymzMips
+
 Afirmative Pill is an academic software architecture project that implements a pharmaceutical e-commerce platform using **GraphQL, Apollo, CQRS, PostgreSQL and React**.
 
 The system allows users to browse medications, search the pharmaceutical catalog, inspect detailed medication information, manage a shopping cart, create orders, validate prescription requirements, reserve inventory consistently and track order status in real time.
